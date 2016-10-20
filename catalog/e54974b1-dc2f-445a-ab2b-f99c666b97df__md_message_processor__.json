@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "ListFlight"
+        }
+    },
+    "id": "e54974b1-dc2f-445a-ab2b-f99c666b97df",
+    "version": "5.2.0.0"
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flights>
+<flight>
+<source></source>
+<destination></destination>
+<fromDate></fromDate>
+<toDate></toDate>
+<price></price>
+<actionType></actionType>
+</flight>
+<flight>
+<source></source>
+<destination></destination>
+<fromDate></fromDate>
+<toDate></toDate>
+<price></price>
+<actionType></actionType>
+</flight>
+</flights>

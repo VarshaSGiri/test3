@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" basePath="fl"/>
+    <db:mysql-config name="MySQL_Configuration" host="localhost" port="3306" user="root" password="root" database="training" doc:name="MySQL Configuration"/>
+    <flow name="flightFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="00e7b437-1fee-43a2-96df-4d2d53b32dd7">
+            <dw:input-payload doc:sample="sample_data\empty_2.xml"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	flightName: payload.flight.actionType
+	}
+
+]]></dw:set-payload>
+        </dw:transform-message>
+        <choice doc:name="Choice">
+            <when expression="payload.flightName=='all'">
+                <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                    <db:parameterized-query><![CDATA[select * from spicejet union select * from air_india]]></db:parameterized-query>
+                </db:select>
+            </when>
+
+            <otherwise>
+                <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                    <db:dynamic-query><![CDATA[select * from #[payload.flightName]]]></db:dynamic-query>
+                </db:select>
+            </otherwise>
+        </choice>
+        <dw:transform-message metadata:id="560beefd-ad1d-4137-abdc-7dd227204c8a" doc:name="Transform Message">
+            <dw:input-payload/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	flights: {
+		(payload map ((payload01 , indexOfPayload01) -> {
+			flight: {
+				source: payload01.from,
+				destination: payload01.to,
+				fromDate: payload01.from_date,
+				toDate: payload01.to_date,
+				price: payload01.price,
+				flightName: payload01.flight_name
+			}
+		}))
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+
+    </flow>
+</mule>
